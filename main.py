@@ -20,14 +20,14 @@ def load_remote_config(path: str):
     with open(path, "r") as f:
         config = json.load(f)
 
-    return config["serial_id"], bytes.fromhex(config["key"]), config.get("counter", 0)
+    return int(config["serial_id"], 16), int(config["key"], 16), int(config.get("counter", 0), 16)
 
 
-def save_remote_config(path: str, serial_id: int, key: bytes, counter: int):
+def save_remote_config(path: str, serial_id: int, key: int, counter: int):
     config = {
-        "serial_id": serial_id,
-        "key": key.hex(),
-        "counter": counter,
+        "serial_id": hex(serial_id),
+        "key": hex(key),
+        "counter": hex(counter),
     }
 
     with open(path, "w") as f:
