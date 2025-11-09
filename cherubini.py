@@ -94,7 +94,7 @@ class CherubiniRemoteDriver:
         pulses = []
 
         for level, duration in sequence:
-            pulses.append(pigpio.pulse(level * 1, (1 - level) * 1, duration))
+            pulses.append(pigpio.pulse(1 << self.tx_pin if level else 0, 0 if level else 1 << self.tx_pin, duration))
 
         return pulses
 
