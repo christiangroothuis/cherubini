@@ -99,16 +99,25 @@ def _expand_key_table(serial_id: SerialID, key: Key8) -> Key8:
 
 
 def encrypt(
-    serial_id: SerialID, counter: int, button_state: int, master_key: BytesLike
+    serial_id: int, counter: int, button_state: int, master_key: int
 ) -> State:
-    """Encrypt (counter, button_state) into cipher state."""
+    """Encrypt (counter, button_state) into cipher state
+    Args:
+        serial_id (int): 28-bit serial ID
+    """
+    serial_id = serial_id.to_bytes(3, "little")
+    master_key = master_key.to_bytes(8, "little")
+
     key_table = _expand_key_table(serial_id, master_key)
+
     r54 = _u8(counter)
     r55 = _u8(counter >> 8)
     r56 = _u8(serial_id[0] << 6)
     r57 = _u8((button_state & 0xF0) | ((serial_id[0] & 0x0C) >> 2))
 
-    return _shift_state_right((r54, r55, r56, r57), key_table)
+    state =  _shift_state_right((r54, r55, r56, r57), key_table)
+
+    return state[0] | (state[1] << 8) | (state[2] << 16) | (state[3] << 24)
 
 
 class DecryptionError(Exception):
@@ -116,9 +125,13 @@ class DecryptionError(Exception):
 
 
 def decrypt(
-    serial_id: SerialID, cipher: State, master_key: BytesLike
+    serial_id: int, cipher: int, master_key: int
 ) -> tuple[int, int]:
     """Decrypt cipher state and return (counter, button_state)."""
+    serial_id = serial_id.to_bytes(3, "little")
+    cipher = cipher.to_bytes(4, "little")
+    master_key = master_key.to_bytes(8, "little")
+
     key_table = _expand_key_table(serial_id, bytes(master_key))
     sid0, *_ = serial_id
     d0, d1, d2, d3 = _shift_state_left(cipher, key_table)
