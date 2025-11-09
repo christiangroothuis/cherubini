@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import cmd
 import sys
 import time
 import pigpio
@@ -99,7 +98,7 @@ class CherubiniRemoteDriver:
 
         return pulses
 
-    def _send_wave(self, sequence: list):
+    def _send_wave(self, sequence: list, repeat=None):
         if repeat is None:
             repeat = REPEATS
 
@@ -111,8 +110,9 @@ class CherubiniRemoteDriver:
         wid = self.pi.wave_create()
 
         try:
-            for _ in range(max(1, self.REPEAT)):
+            for _ in range(max(1, repeat)):
                 self.pi.wave_send_once(wid)
+
                 while self.pi.wave_tx_busy():
                     time.sleep(0.002)
         finally:
