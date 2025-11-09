@@ -32,9 +32,10 @@ discovery_payload = {
         "identifiers": ["blinds_controller_1"],
         "name": "Cherubini",
         "manufacturer": "Cherubini",
-        "model": "pigpio-mqtt"
-    }
+        "model": "pigpio-mqtt",
+    },
 }
+
 
 def load_remote_config(path: str):
     with open(path, "r") as f:
@@ -75,6 +76,7 @@ def on_message(_c, _u, message):
     driver.command(payload, counter)
     save_remote_config(REMOTE_CONFIG_PATH, serial_id, key, counter)
     print("Sent command:", payload)
+
 
 client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=MQTT_CLIENT_ID)
 if MQTT_USERNAME and MQTT_PASSWORD:
