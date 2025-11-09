@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import os
+import signal
 import paho.mqtt.client as mqtt
 
 from cherubini import CherubiniRemoteDriver
@@ -85,18 +86,28 @@ if MQTT_USERNAME and MQTT_PASSWORD:
 client.on_connect = on_connect
 client.on_message = on_message
 
-try:
-    client.connect(MQTT_HOST, MQTT_PORT, keepalive=30)
-    client.will_set(MQTT_TOPIC_AVAILABILITY, "offline", qos=1, retain=True)
-    client.publish(MQTT_TOPIC_AVAILABILITY, "online", qos=1, retain=True)
-    client.publish(discovery_topic, json.dumps(discovery_payload), qos=1, retain=True)
-    print(f"Listening for MQTT '{MQTT_TOPIC_CMD}' (UP/DOWN/STOP)")
-    client.loop_forever()
-except KeyboardInterrupt:
-    pass
-finally:
+client.will_set(MQTT_TOPIC_AVAILABILITY, "offline", qos=1, retain=True)
+
+
+def handle_shutdown(signum, frame):
+    print("Shutting down...", flush=True)
     try:
+        client.publish(MQTT_TOPIC_AVAILABILITY, "offline", qos=1, retain=True)
         client.disconnect()
     except Exception:
         pass
+
+
+signal.signal(signal.SIGTERM, handle_shutdown)
+signal.signal(signal.SIGINT, handle_shutdown)
+
+client.connect(MQTT_HOST, MQTT_PORT, keepalive=30)
+client.publish(MQTT_TOPIC_AVAILABILITY, "online", qos=1, retain=True)
+client.publish(discovery_topic, json.dumps(discovery_payload), qos=1, retain=True)
+print(f"Listening for MQTT '{MQTT_TOPIC_CMD}' (UP/DOWN/STOP)")
+client.loop_forever()
+
+try:
     driver.close()
+except Exception:
+    pass
