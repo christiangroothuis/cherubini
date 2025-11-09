@@ -12,8 +12,8 @@ MQTT_TOPIC = "cherubini/command"
 MQTT_USERNAME = os.getenv("MQTT_USERNAME") or None
 MQTT_PASSWORD = os.getenv("MQTT_PASSWORD") or None
 
-TX_PIN = int(os.getenv("CHERUBINI_TX_PIN", "23"))
-REMOTE_CONFIG_PATH = os.getenv("CHERUBINI_REMOTE_CONFIG_PATH", "remote_config.json")
+TX_PIN = int(os.getenv("TX_PIN", "23"))
+REMOTE_CONFIG_PATH = os.getenv("CHERUBINI_REMOTE_CONFIG_PATH", "remote.json")
 
 
 def load_remote_config(path: str):
