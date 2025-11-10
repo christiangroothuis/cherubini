@@ -4,6 +4,7 @@ class LeeKoq:
     # 1-bit lookup table for the NLF
     LUT = 0x3A5C742E
 
+    @staticmethod
     def encrypt(block: int, key: int) -> int:
         """
         Encrypts a 32-bit block of plaintext using the KeeLoq algorithm.
@@ -29,6 +30,7 @@ class LeeKoq:
 
         return block
 
+    @staticmethod
     def decrypt(block: int, key: int) -> int:
         """
         Decrypts a 32-bit block of ciphertext using the KeeLoq algorithm.
@@ -54,6 +56,7 @@ class LeeKoq:
 
         return block
 
+    @staticmethod
     def normalkeygen(serial: int, mkey: int) -> int:
         """
         Generates a per-device key, based on the serial number and the manufacturer key

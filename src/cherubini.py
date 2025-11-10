@@ -3,7 +3,7 @@ import sys
 import time
 import pigpio
 
-from leekoq import LeeKoq
+from src.leekoq import LeeKoq
 
 TICK_US = 200
 PREAMBLE_TICKS = 46
@@ -38,9 +38,7 @@ def build_payload(serial_id: int, counter: int, button: int, key: int) -> bytes:
 
 
 class CherubiniRemoteDriver:
-    def __init__(self, serial_id, key, tx_pin=None, addr=None, port=None):
-        self.serial_id = serial_id
-        self.key = key
+    def __init__(self, tx_pin, addr=None, port=8888):
         self.tx_pin = tx_pin
         self.pi = pigpio.pi(addr, port) if addr else pigpio.pi()
 
@@ -122,17 +120,16 @@ class CherubiniRemoteDriver:
     def stop_now(self):
         if self.pi.wave_tx_busy():
             self.pi.wave_tx_stop()
+
         self.pi.write(self.tx_pin, 0)
 
-    def command(self, command: str, counter: int):
-        button = command_map.get(command.upper())
+    def transmit(self, serial_id: int, counter: int, button: int, key: int):
         payload = build_payload(
-            serial_id=self.serial_id,
+            serial_id=serial_id,
             counter=counter,
             button=button,
-            key=self.key,
+            key=key,
         )
-
         sequence = self._build_sequence(payload)
 
         self._send_wave(sequence)

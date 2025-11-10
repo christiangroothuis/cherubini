@@ -3,8 +3,9 @@ import json
 import os
 import signal
 import paho.mqtt.client as mqtt
+from paho.mqtt.enums import CallbackAPIVersion
 
-from cherubini import CherubiniRemoteDriver
+from src.cherubini import CherubiniRemoteDriver, command_map
 
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
@@ -30,10 +31,9 @@ discovery_payload = {
     "payload_stop": "STOP",
     "optimistic": True,
     "device": {
-        "identifiers": ["blinds_controller_1"],
         "name": "Cherubini",
         "manufacturer": "Cherubini",
-        "model": "pigpio-mqtt",
+        "model": "Giro Wall",
     },
 }
 
@@ -56,30 +56,30 @@ def save_remote_config(path: str, serial_id: int, key: int, counter: int):
         json.dump(config, f, indent=4)
 
 
-serial_id, key, counter = load_remote_config(REMOTE_CONFIG_PATH)
-driver = CherubiniRemoteDriver(serial_id=serial_id, key=key, tx_pin=TX_PIN)
+driver = CherubiniRemoteDriver(tx_pin=TX_PIN)
 
 
-def on_connect(client, userdata, flags, reason_code, properties):
+def on_connect(client, _userdata, _flags, reason_code, _properties):
     print(f"Connected with result code {reason_code}")
     client.subscribe(MQTT_TOPIC_CMD, qos=1)
 
 
 def on_message(_c, _u, message):
-    payload = (message.payload.decode() if message.payload else "").strip().upper()
+    command = (message.payload.decode() if message.payload else "").strip().upper()
+    button = command_map.get(command.upper())
 
-    if payload not in ("UP", "DOWN", "STOP"):
-        print("Ignoring:", repr(payload))
+    if button is None:
+        print("Ignoring:", repr(command))
         return
 
-    _, _, counter = load_remote_config(REMOTE_CONFIG_PATH)
+    serial_id, key, counter = load_remote_config(REMOTE_CONFIG_PATH)
     counter = (counter + 1) & 0xFFFF
-    driver.command(payload, counter)
+    driver.transmit(serial_id=serial_id, counter=counter, button=button, key=key)
     save_remote_config(REMOTE_CONFIG_PATH, serial_id, key, counter)
-    print("Sent command:", payload)
+    print("Sent command:", command)
 
 
-client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=MQTT_CLIENT_ID)
+client = mqtt.Client(CallbackAPIVersion.VERSION2, client_id=MQTT_CLIENT_ID)
 if MQTT_USERNAME and MQTT_PASSWORD:
     client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
 
@@ -89,7 +89,7 @@ client.on_message = on_message
 client.will_set(MQTT_TOPIC_AVAILABILITY, "offline", qos=1, retain=True)
 
 
-def handle_shutdown(signum, frame):
+def handle_shutdown(_signum, _frame):
     print("Shutting down...", flush=True)
     try:
         client.publish(MQTT_TOPIC_AVAILABILITY, "offline", qos=1, retain=True)
