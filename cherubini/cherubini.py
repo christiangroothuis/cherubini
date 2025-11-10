@@ -38,8 +38,9 @@ def build_payload(serial_id: int, counter: int, button: int, key: int) -> bytes:
 
 
 class CherubiniRemoteDriver:
-    def __init__(self, tx_pin, addr=None, port=8888):
+    def __init__(self, tx_pin, addr=None, port=8888, repeats=REPEATS):
         self.tx_pin = tx_pin
+        self.repeats = repeats
         self.pi = pigpio.pi(addr, port) if addr else pigpio.pi()
 
         if not self.pi.connected:
@@ -123,7 +124,7 @@ class CherubiniRemoteDriver:
 
         self.pi.write(self.tx_pin, 0)
 
-    def transmit(self, serial_id: int, counter: int, button: int, key: int, repeats: int = REPEATS):
+    def transmit(self, serial_id: int, counter: int, button: int, key: int):
         payload = build_payload(
             serial_id=serial_id,
             counter=counter,
@@ -132,7 +133,7 @@ class CherubiniRemoteDriver:
         )
         sequence = self._build_sequence(payload)
 
-        self._send_wave(sequence, repeat=repeats)
+        self._send_wave(sequence, repeat=self.repeats)
 
     def close(self):
         self.stop_now()
