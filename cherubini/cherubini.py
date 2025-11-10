@@ -3,7 +3,7 @@ import sys
 import time
 import pigpio
 
-from src.leekoq import LeeKoq
+from cherubini.leekoq import LeeKoq
 
 TICK_US = 200
 PREAMBLE_TICKS = 46

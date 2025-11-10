@@ -5,7 +5,7 @@ import signal
 import paho.mqtt.client as mqtt
 from paho.mqtt.enums import CallbackAPIVersion
 
-from src.cherubini import CherubiniRemoteDriver, command_map
+from cherubini.cherubini import CherubiniRemoteDriver, command_map
 
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
