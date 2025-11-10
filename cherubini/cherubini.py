@@ -123,7 +123,7 @@ class CherubiniRemoteDriver:
 
         self.pi.write(self.tx_pin, 0)
 
-    def transmit(self, serial_id: int, counter: int, button: int, key: int):
+    def transmit(self, serial_id: int, counter: int, button: int, key: int, repeats: int = REPEATS):
         payload = build_payload(
             serial_id=serial_id,
             counter=counter,
@@ -132,7 +132,7 @@ class CherubiniRemoteDriver:
         )
         sequence = self._build_sequence(payload)
 
-        self._send_wave(sequence)
+        self._send_wave(sequence, repeat=repeats)
 
     def close(self):
         self.stop_now()
