@@ -10,7 +10,6 @@ PREAMBLE_TICKS = 46
 PREAMBLE_GAP_TICKS = 20
 TAIL_GAP_TICKS = 75
 TOTAL_BITS = 66
-REPEATS = 2
 
 command_map = {
     "UP": 0x50,
@@ -38,7 +37,7 @@ def build_payload(serial_id: int, counter: int, button: int, key: int) -> bytes:
 
 
 class CherubiniRemoteDriver:
-    def __init__(self, tx_pin, addr=None, port=8888, repeats=REPEATS):
+    def __init__(self, tx_pin, addr=None, port=8888, repeats=2):
         self.tx_pin = tx_pin
         self.repeats = repeats
         self.pi = pigpio.pi(addr, port) if addr else pigpio.pi()
@@ -124,7 +123,7 @@ class CherubiniRemoteDriver:
 
         self.pi.write(self.tx_pin, 0)
 
-    def transmit(self, serial_id: int, counter: int, button: int, key: int):
+    def transmit(self, serial_id: int, counter: int, button: int, key: int, repeat=None):
         payload = build_payload(
             serial_id=serial_id,
             counter=counter,
@@ -133,7 +132,7 @@ class CherubiniRemoteDriver:
         )
         sequence = self._build_sequence(payload)
 
-        self._send_wave(sequence, repeat=self.repeats)
+        self._send_wave(sequence, repeat=repeat if repeat is not None else self.repeats)
 
     def close(self):
         self.stop_now()
